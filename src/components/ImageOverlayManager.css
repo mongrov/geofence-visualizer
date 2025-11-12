@@ -1,0 +1,409 @@
+.image-overlay-manager {
+  padding: 1rem;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.image-overlay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.image-overlay-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.overlay-header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.image-overlay-header button,
+.export-import-button {
+  padding: 0.5rem 1rem;
+  background: #1e40af;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s;
+}
+
+.image-overlay-header button:hover,
+.export-import-button:hover {
+  background: #1e3a8a;
+}
+
+.file-upload-label {
+  display: inline-block;
+  cursor: pointer;
+}
+
+.image-overlay-form {
+  background: white;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  border: 1px solid #e5e7eb;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group input[type="file"],
+.form-group select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.get-bounds-button {
+  width: 100%;
+  padding: 0.5rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+}
+
+.get-bounds-button:hover {
+  background: #2563eb;
+}
+
+.bounds-inputs,
+.reference-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.bounds-inputs > div,
+.reference-inputs > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.bounds-inputs label,
+.reference-inputs label {
+  font-size: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.image-preview {
+  margin-top: 0.5rem;
+  max-width: 100%;
+  max-height: 200px;
+  overflow: hidden;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+}
+
+.image-preview img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.image-info {
+  padding: 0.5rem;
+  background: #eff6ff;
+  font-size: 0.75rem;
+  color: #1e40af;
+  text-align: center;
+  border-top: 1px solid #d1d5db;
+}
+
+.help-text {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background: #eff6ff;
+  border-left: 3px solid #1e40af;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: #1e40af;
+}
+
+.help-text ul {
+  margin: 0.5rem 0 0 1rem;
+  padding: 0;
+}
+
+.help-text li {
+  margin-bottom: 0.25rem;
+}
+
+.add-button {
+  width: 100%;
+  padding: 0.75rem;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+.add-button:hover {
+  background: #059669;
+}
+
+.image-overlay-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.image-overlay-item {
+  background: white;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #e5e7eb;
+}
+
+.overlay-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.overlay-item-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.edit-button {
+  padding: 0.25rem 0.5rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.edit-button:hover {
+  background: #2563eb;
+}
+
+.delete-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.delete-button:hover {
+  color: #dc2626;
+}
+
+.overlay-item-info {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.overlay-item-info div {
+  margin-bottom: 0.25rem;
+}
+
+.image-overlay-edit-form {
+  background: #fff3cd;
+  border: 2px solid #ffc107;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.edit-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #ffc107;
+}
+
+.edit-form-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  color: #856404;
+}
+
+.edit-form-header button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #856404;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.realtime-bounds-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.bounds-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.bound-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.bound-control label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #856404;
+}
+
+.bound-input-with-buttons {
+  display: flex;
+  gap: 0.25rem;
+  align-items: stretch;
+}
+
+.bound-input-with-buttons input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.adjust-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 40px;
+}
+
+.adjust-button {
+  flex: 1;
+  min-height: 24px;
+  padding: 0.25rem 0.5rem;
+  background: #ffc107;
+  color: #856404;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.adjust-button:hover {
+  background: #ffb300;
+  border-color: #ffb300;
+}
+
+.opacity-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.opacity-control label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #856404;
+}
+
+.opacity-control input[type="range"] {
+  width: 100%;
+}
+
+.adjust-step-control {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.adjust-step-control label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #856404;
+}
+
+.adjust-step-control select {
+  padding: 0.5rem;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  background: white;
+  color: #856404;
+}
+
+.quick-adjust-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.quick-adjust-btn {
+  padding: 0.5rem;
+  background: #ffc107;
+  color: #856404;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.quick-adjust-btn:hover {
+  background: #ffb300;
+  border-color: #ffb300;
+}
+

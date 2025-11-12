@@ -10,6 +10,8 @@ import EventLog from './components/EventLog'
 import StatisticsPanel from './components/StatisticsPanel'
 import Notification from './components/Notification'
 import NotificationHistory from './components/NotificationHistory'
+import ImageOverlayLayer from './components/ImageOverlayLayer'
+import ImageOverlayManager from './components/ImageOverlayManager'
 
 // Fix Leaflet default icon issue
 delete L.Icon.Default.prototype._getIconUrl
@@ -19,7 +21,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 })
 
-function MapUpdater({ center, zoom, preserveZoom = false }) {
+function MapUpdater({ center, zoom, preserveZoom = false, onMapReady }) {
   const map = useMap()
   useEffect(() => {
     if (center) {
@@ -31,6 +33,13 @@ function MapUpdater({ center, zoom, preserveZoom = false }) {
       }
     }
   }, [center, zoom, map, preserveZoom])
+  
+  useEffect(() => {
+    if (onMapReady && map) {
+      onMapReady(map)
+    }
+  }, [map, onMapReady])
+  
   return null
 }
 
@@ -52,6 +61,50 @@ function App() {
   const [notifications, setNotifications] = useState([]) // Popup notifications (auto-dismiss)
   const [notificationHistory, setNotificationHistory] = useState([]) // Persistent history
   const [showNotificationHistory, setShowNotificationHistory] = useState(false)
+  const [imageOverlays, setImageOverlays] = useState(() => {
+    // Load from localStorage on init
+    try {
+      const saved = localStorage.getItem('geofence-visualizer-image-overlays')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        return Array.isArray(parsed) ? parsed : []
+      }
+    } catch (error) {
+      console.error('Error loading image overlays from localStorage:', error)
+    }
+    return []
+  })
+
+  // Load geofences from localStorage on init
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('geofence-visualizer-geofences')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const newGeofences = new Map()
+          parsed.forEach(geofence => {
+            if (geofence.name && geofence.polygon) {
+              newGeofences.set(geofence.name, {
+                name: geofence.name,
+                polygon: geofence.polygon,
+                mac: geofence.mac || null,
+                strokeColor: geofence.strokeColor || null,
+                strokeWidth: geofence.strokeWidth !== null && geofence.strokeWidth !== undefined ? geofence.strokeWidth : null,
+                strokeOpacity: geofence.strokeOpacity !== null && geofence.strokeOpacity !== undefined ? geofence.strokeOpacity : null
+              })
+            }
+          })
+          if (newGeofences.size > 0) {
+            setGeofences(newGeofences)
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading geofences from localStorage:', error)
+    }
+  }, [])
+  const mapRef = useRef(null)
   const eventsRef = useRef(events)
 
   useEffect(() => {
@@ -489,6 +542,213 @@ function App() {
     }
   }
 
+  // Save image overlays to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('geofence-visualizer-image-overlays', JSON.stringify(imageOverlays))
+    } catch (error) {
+      console.error('Error saving image overlays to localStorage:', error)
+    }
+  }, [imageOverlays])
+
+  // Save geofences to localStorage whenever they change
+  useEffect(() => {
+    try {
+      const geofencesArray = Array.from(geofences.values()).map(g => ({
+        name: g.name,
+        polygon: g.polygon,
+        mac: g.mac || null,
+        strokeColor: g.strokeColor || null,
+        strokeWidth: g.strokeWidth !== null && g.strokeWidth !== undefined ? g.strokeWidth : null,
+        strokeOpacity: g.strokeOpacity !== null && g.strokeOpacity !== undefined ? g.strokeOpacity : null
+      }))
+      localStorage.setItem('geofence-visualizer-geofences', JSON.stringify(geofencesArray))
+    } catch (error) {
+      console.error('Error saving geofences to localStorage:', error)
+    }
+  }, [geofences])
+
+  const handleAddImageOverlay = (overlay) => {
+    setImageOverlays(prev => [...prev, overlay])
+  }
+
+  const handleDeleteImageOverlay = (id) => {
+    setImageOverlays(prev => prev.filter(o => o.id !== id))
+  }
+
+  const handleUpdateImageOverlay = (updatedOverlay) => {
+    setImageOverlays(prev => prev.map(o => o.id === updatedOverlay.id ? updatedOverlay : o))
+  }
+
+  const handleExportImageOverlays = () => {
+    // Export both image overlays and geofences
+    const geofencesArray = Array.from(geofences.values()).map(g => ({
+      name: g.name,
+      polygon: g.polygon,
+      mac: g.mac || null,
+      strokeColor: g.strokeColor || null,
+      strokeWidth: g.strokeWidth !== null && g.strokeWidth !== undefined ? g.strokeWidth : null,
+      strokeOpacity: g.strokeOpacity !== null && g.strokeOpacity !== undefined ? g.strokeOpacity : null
+    }))
+    
+    // Don't export if both arrays are empty
+    if (imageOverlays.length === 0 && geofencesArray.length === 0) {
+      alert('Nothing to export. Please add image overlays or geofences first.')
+      return
+    }
+    
+    const data = {
+      imageOverlays: imageOverlays,
+      geofences: geofencesArray,
+      version: '1.0',
+      exportedAt: new Date().toISOString()
+    }
+    
+    const dataStr = JSON.stringify(data, null, 2)
+    const dataBlob = new Blob([dataStr], { type: 'application/json' })
+    const url = URL.createObjectURL(dataBlob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'geofence-visualizer-config.json'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
+  const handleImportImageOverlays = (file) => {
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      try {
+        const imported = JSON.parse(event.target.result)
+        
+        // Handle new format with both imageOverlays and geofences
+        let imageOverlaysData = null
+        let geofencesData = null
+        
+        if (imported.imageOverlays || imported.geofences) {
+          // New format: { imageOverlays: [...], geofences: [...] }
+          imageOverlaysData = imported.imageOverlays
+          geofencesData = imported.geofences
+        } else if (Array.isArray(imported)) {
+          // Old format: array of image overlays only
+          imageOverlaysData = imported
+        } else {
+          alert('Invalid file format. Expected an object with imageOverlays and/or geofences, or an array of image overlays.')
+          return
+        }
+        
+        let importedCount = 0
+        let geofencesCount = 0
+        
+        // Import image overlays
+        if (imageOverlaysData && Array.isArray(imageOverlaysData)) {
+          const validOverlays = imageOverlaysData.filter(o => 
+            o.id && o.name && o.url && o.bounds && 
+            o.bounds.south && o.bounds.north && o.bounds.west && o.bounds.east
+          )
+          
+          if (validOverlays.length > 0) {
+            const shouldReplace = window.confirm(
+              `Found ${validOverlays.length} image overlay(s). Replace existing overlays? (Cancel to merge)`
+            )
+            
+            if (shouldReplace) {
+              setImageOverlays(validOverlays)
+            } else {
+              setImageOverlays(prev => {
+                const existingIds = new Set(prev.map(o => o.id))
+                const newOverlays = validOverlays.filter(o => !existingIds.has(o.id))
+                return [...prev, ...newOverlays]
+              })
+            }
+            importedCount = validOverlays.length
+          }
+        }
+        
+        // Import geofences
+        if (geofencesData && Array.isArray(geofencesData)) {
+          const validGeofences = geofencesData.filter(g => 
+            g.name && g.polygon && g.polygon.type && g.polygon.coordinates
+          )
+          
+          if (validGeofences.length > 0) {
+            const shouldReplace = window.confirm(
+              `Found ${validGeofences.length} geofence(s). Replace existing geofences? (Cancel to merge)`
+            )
+            
+            setGeofences(prev => {
+              const newGeofences = new Map(prev)
+              
+              if (shouldReplace) {
+                newGeofences.clear()
+              }
+              
+              validGeofences.forEach(geofence => {
+                newGeofences.set(geofence.name, {
+                  name: geofence.name,
+                  polygon: geofence.polygon,
+                  mac: geofence.mac || null,
+                  strokeColor: geofence.strokeColor || null,
+                  strokeWidth: geofence.strokeWidth !== null && geofence.strokeWidth !== undefined ? geofence.strokeWidth : null,
+                  strokeOpacity: geofence.strokeOpacity !== null && geofence.strokeOpacity !== undefined ? geofence.strokeOpacity : null
+                })
+              })
+              
+              return newGeofences
+            })
+            geofencesCount = validGeofences.length
+          }
+        }
+        
+        if (importedCount === 0 && geofencesCount === 0) {
+          alert('No valid image overlays or geofences found in the file')
+        } else {
+          const parts = []
+          if (importedCount > 0) parts.push(`${importedCount} image overlay(s)`)
+          if (geofencesCount > 0) parts.push(`${geofencesCount} geofence(s)`)
+          alert(`Successfully imported ${parts.join(' and ')}`)
+        }
+      } catch (error) {
+        console.error('Error importing configuration:', error)
+        alert('Error importing file: ' + error.message)
+      }
+    }
+    reader.readAsText(file)
+  }
+
+  const handleMapReady = (map) => {
+    mapRef.current = map
+  }
+
+  const handleGetCurrentMapBounds = () => {
+    if (mapRef.current) {
+      const bounds = mapRef.current.getBounds()
+      return {
+        south: bounds.getSouth(),
+        north: bounds.getNorth(),
+        west: bounds.getWest(),
+        east: bounds.getEast()
+      }
+    }
+    
+    // Fallback: estimate based on center and zoom
+    const lat = mapCenter[0]
+    const lon = mapCenter[1]
+    const zoom = mapZoom
+    
+    const degreePerPixel = 360 / (256 * Math.pow(2, zoom))
+    const width = degreePerPixel * 512
+    const height = degreePerPixel * 512
+    
+    return {
+      south: lat - height / 2,
+      north: lat + height / 2,
+      west: lon - width / 2,
+      east: lon + width / 2
+    }
+  }
+
   return (
     <div className="app">
       {/* Notification Container */}
@@ -517,6 +777,28 @@ function App() {
               <span className="notification-badge">{notificationHistory.length}</span>
             )}
           </button>
+          <button 
+            className="header-action-button"
+            onClick={handleExportImageOverlays}
+            title="Export image overlays and geofences (GeoJSON)"
+          >
+            💾 Export
+          </button>
+          <label className="header-action-button file-upload-label">
+            📥 Import
+            <input
+              type="file"
+              accept=".json"
+              onChange={(e) => {
+                const file = e.target.files[0]
+                if (file && handleImportImageOverlays) {
+                  handleImportImageOverlays(file)
+                }
+                e.target.value = '' // Reset file input
+              }}
+              style={{ display: 'none' }}
+            />
+          </label>
           <div className="connection-status">
             <span className={`status-indicator ${connected ? 'connected' : 'disconnected'}`}></span>
             <span>{connected ? 'Connected' : 'Disconnected'}</span>
@@ -601,6 +883,14 @@ function App() {
           <StatisticsPanel badges={badges} geofences={geofences} events={events} />
           
           <EventLog events={events} />
+          
+          <ImageOverlayManager
+            imageOverlays={imageOverlays}
+            onAddOverlay={handleAddImageOverlay}
+            onDeleteOverlay={handleDeleteImageOverlay}
+            onUpdateOverlay={handleUpdateImageOverlay}
+            onGetCurrentBounds={handleGetCurrentMapBounds}
+          />
         </div>
 
         <div className="map-container">
@@ -624,6 +914,7 @@ function App() {
               center={mapCenter} 
               zoom={mapZoom} 
               preserveZoom={focusMode}
+              onMapReady={handleMapReady}
             />
             
             {showGeofences && (
@@ -643,6 +934,8 @@ function App() {
                 showAnimations={showEventAnimations}
               />
             )}
+            
+            <ImageOverlayLayer imageOverlays={imageOverlays} />
           </MapContainer>
           
           {testMode && (

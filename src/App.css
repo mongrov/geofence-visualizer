@@ -40,7 +40,8 @@
   gap: 1rem;
 }
 
-.notification-history-button {
+.notification-history-button,
+.header-action-button {
   position: relative;
   padding: 0.5rem 1rem;
   background: rgba(255, 255, 255, 0.2);
@@ -55,9 +56,14 @@
   gap: 0.5rem;
 }
 
-.notification-history-button:hover {
+.notification-history-button:hover,
+.header-action-button:hover {
   background: rgba(255, 255, 255, 0.3);
   border-color: rgba(255, 255, 255, 0.5);
+}
+
+.file-upload-label {
+  cursor: pointer;
 }
 
 .notification-badge {
