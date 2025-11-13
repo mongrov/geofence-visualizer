@@ -209,6 +209,53 @@ io.on('connection', (socket) => {
     // For now, clients can add geofences manually
     console.log('Geofence data requested')
   })
+  
+  // Handle badge location publish requests
+  socket.on('publish_badge_location', (data) => {
+    try {
+      if (!mqttClient.connected) {
+        console.error('❌ Cannot publish to MQTT: client not connected')
+        socket.emit('publish_error', { error: 'MQTT client not connected' })
+        return
+      }
+      
+      const { mac, latitude, longitude, radius } = data
+      
+      if (!mac || latitude === null || latitude === undefined || 
+          longitude === null || longitude === undefined) {
+        console.error('❌ Invalid badge data for MQTT publish:', data)
+        socket.emit('publish_error', { error: 'Invalid badge data: missing mac, latitude, or longitude' })
+        return
+      }
+      
+      // Construct MQTT topic: old/assets/{mac}/location
+      const topic = `old/assets/${mac}/location`
+      
+      // Prepare payload matching the expected format
+      const payload = {
+        mac: mac,
+        latitude: latitude,
+        longitude: longitude,
+        ...(radius !== null && radius !== undefined && { radius: radius }),
+        sent_ts: new Date().toISOString(),
+        timestamp: new Date().toISOString()
+      }
+      
+      // Publish to MQTT
+      mqttClient.publish(topic, JSON.stringify(payload), { qos: 0 }, (err) => {
+        if (err) {
+          console.error('❌ Error publishing to MQTT:', err)
+          socket.emit('publish_error', { error: err.message })
+        } else {
+          console.log(`✅ Published badge location to MQTT topic: ${topic}`, payload)
+          socket.emit('publish_success', { topic, payload })
+        }
+      })
+    } catch (error) {
+      console.error('❌ Error handling publish_badge_location:', error)
+      socket.emit('publish_error', { error: error.message })
+    }
+  })
 })
 
 // REST API endpoints

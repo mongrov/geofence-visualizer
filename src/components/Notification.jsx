@@ -17,6 +17,10 @@ function Notification({ message, type, onClose, duration = 5000 }) {
         return '→'
       case 'exit':
         return '←'
+      case 'success':
+        return '✓'
+      case 'error':
+        return '✗'
       default:
         return '•'
     }
@@ -25,8 +29,12 @@ function Notification({ message, type, onClose, duration = 5000 }) {
   const getColor = () => {
     switch (type) {
       case 'enter':
-        return '#10b981' // Green
+        return '#72ddf7' // Blue
       case 'exit':
+        return '#f72585' // Pink
+      case 'success':
+        return '#00ff00' // Green
+      case 'error':
         return '#ef4444' // Red
       default:
         return '#6b7280' // Gray

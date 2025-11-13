@@ -272,6 +272,28 @@ function App() {
       }
     })
 
+    newSocket.on('publish_success', (data) => {
+      console.log('✅ Successfully published to MQTT:', data)
+      const notificationId = Date.now() + Math.random()
+      setNotifications(prev => [...prev, {
+        id: notificationId,
+        message: `Successfully published badge location to MQTT topic: ${data.topic}`,
+        type: 'success',
+        timestamp: new Date().toISOString()
+      }])
+    })
+
+    newSocket.on('publish_error', (data) => {
+      console.error('❌ Error publishing to MQTT:', data)
+      const notificationId = Date.now() + Math.random()
+      setNotifications(prev => [...prev, {
+        id: notificationId,
+        message: `Failed to publish to MQTT: ${data.error}`,
+        type: 'error',
+        timestamp: new Date().toISOString()
+      }])
+    })
+
     setSocket(newSocket)
 
     return () => {
@@ -876,6 +898,15 @@ function App() {
                   setMapCenter([bounds.centerLat, bounds.centerLon])
                   setMapZoom(bounds.zoom)
                 }
+              }
+            }}
+            onPublishToMqtt={(badgeData) => {
+              if (socket && badgeData.mac && badgeData.latitude !== null && badgeData.longitude !== null) {
+                socket.emit('publish_badge_location', badgeData)
+                console.log('📤 Publishing badge location to MQTT:', badgeData)
+              } else {
+                console.warn('⚠️ Cannot publish to MQTT: missing socket connection or badge data')
+                alert('Cannot publish to MQTT: Please ensure you are connected and the badge has valid coordinates.')
               }
             }}
           />

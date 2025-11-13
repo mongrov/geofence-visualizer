@@ -26,7 +26,8 @@ function ControlPanel({
   focusedBadge,
   onSetFocusedBadge,
   onCenterMap,
-  onFitToGeofences
+  onFitToGeofences,
+  onPublishToMqtt
 }) {
   const [newBadgeMac, setNewBadgeMac] = useState('')
   const [newBadgeLat, setNewBadgeLat] = useState('28.594483408107756')
@@ -34,7 +35,6 @@ function ControlPanel({
   const [newBadgeRadius, setNewBadgeRadius] = useState('20')
   const [showAddBadge, setShowAddBadge] = useState(false)
   const [showAddGeofence, setShowAddGeofence] = useState(false)
-  const [drawingMode, setDrawingMode] = useState(false)
 
   const handleAddBadge = () => {
     if (newBadgeMac && newBadgeLat && newBadgeLon) {
@@ -482,6 +482,22 @@ function ControlPanel({
                     }}
                   >
                     Center Map
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      if (badge.latitude && badge.longitude && badge.mac) {
+                        onPublishToMqtt({
+                          mac: badge.mac,
+                          latitude: badge.latitude,
+                          longitude: badge.longitude,
+                          radius: badge.radius || null
+                        })
+                      }
+                    }}
+                    style={{ marginTop: '8px' }}
+                  >
+                    Publish to MQTT
                   </button>
                 </div>
               )}
